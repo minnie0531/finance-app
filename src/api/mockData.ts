@@ -67,6 +67,84 @@ export const MOCK_QUOTES: Record<string, StockQuote> = {
     currency: 'USD',
     timestamp: Date.now(),
   },
+  AAPL: {
+    symbol: 'AAPL',
+    name: 'Apple Inc.',
+    price: 224.23,
+    change: 2.15,
+    changePercent: 0.97,
+    open: 222.5,
+    high: 225.1,
+    low: 221.8,
+    volume: 48920000,
+    currency: 'USD',
+    timestamp: Date.now(),
+  },
+  GOOGL: {
+    symbol: 'GOOGL',
+    name: 'Alphabet Inc.',
+    price: 168.42,
+    change: 1.82,
+    changePercent: 1.09,
+    open: 166.8,
+    high: 169.5,
+    low: 166.2,
+    volume: 24100000,
+    currency: 'USD',
+    timestamp: Date.now(),
+  },
+  NVDA: {
+    symbol: 'NVDA',
+    name: 'NVIDIA Corporation',
+    price: 135.58,
+    change: 4.25,
+    changePercent: 3.24,
+    open: 131.5,
+    high: 136.2,
+    low: 130.8,
+    volume: 62450000,
+    currency: 'USD',
+    timestamp: Date.now(),
+  },
+  AMZN: {
+    symbol: 'AMZN',
+    name: 'Amazon.com, Inc.',
+    price: 186.49,
+    change: -0.85,
+    changePercent: -0.45,
+    open: 187.5,
+    high: 188.4,
+    low: 185.2,
+    volume: 31200000,
+    currency: 'USD',
+    timestamp: Date.now(),
+  },
+  META: {
+    symbol: 'META',
+    name: 'Meta Platforms, Inc.',
+    price: 582.01,
+    change: 6.45,
+    changePercent: 1.12,
+    open: 576.2,
+    high: 585.0,
+    low: 574.8,
+    volume: 14500000,
+    currency: 'USD',
+    timestamp: Date.now(),
+  },
+  TSLA: {
+    symbol: 'TSLA',
+    name: 'Tesla, Inc.',
+    price: 242.84,
+    change: -3.6,
+    changePercent: -1.46,
+    open: 246.0,
+    high: 248.5,
+    low: 240.2,
+    volume: 58300000,
+    currency: 'USD',
+    timestamp: Date.now(),
+  },
 };
 
 // Helper to generate past dates
@@ -88,6 +166,12 @@ const SEVEN_DAY_PRICES: Record<string, number[]> = {
   ORCL: [168.0, 169.5, 170.1, 169.8, 171.2, 171.9, 172.6],
   SAP: [231.0, 232.5, 234.0, 233.2, 235.1, 235.8, 236.1],
   CRM: [295.0, 293.2, 291.5, 292.0, 289.4, 290.1, 288.75],
+  AAPL: [218.5, 220.1, 219.4, 221.8, 223.2, 222.9, 224.23],
+  GOOGL: [163.2, 164.8, 165.5, 166.1, 167.3, 166.9, 168.42],
+  NVDA: [126.4, 128.9, 131.2, 130.5, 133.8, 134.2, 135.58],
+  AMZN: [188.2, 187.5, 186.8, 188.1, 185.9, 187.2, 186.49],
+  META: [565.0, 569.2, 572.8, 574.1, 578.5, 580.4, 582.01],
+  TSLA: [251.2, 248.5, 245.0, 246.8, 244.1, 241.5, 242.84],
 };
 
 // 90-day base prices and volatility simulation
@@ -97,12 +181,26 @@ const QUARTER_BASE_PRICES: Record<string, { start: number; drift: number }> = {
   ORCL: { start: 140.0, drift: 0.36 },
   SAP: { start: 195.0, drift: 0.45 },
   CRM: { start: 260.0, drift: 0.32 },
+  AAPL: { start: 190.0, drift: 0.39 },
+  GOOGL: { start: 145.0, drift: 0.26 },
+  NVDA: { start: 98.0, drift: 0.42 },
+  AMZN: { start: 168.0, drift: 0.21 },
+  META: { start: 480.0, drift: 1.14 },
+  TSLA: { start: 210.0, drift: 0.37 },
 };
 
-export function getMockHistoricalData(symbol: string, days: number): CompanyHistory {
+export function hasMockDataForSymbol(symbol: string): boolean {
   const upper = symbol.toUpperCase().trim();
-  const profile = CompanyRegistry.get(upper) || CompanyRegistry.register(upper);
+  return Boolean(MOCK_QUOTES[upper] || SEVEN_DAY_PRICES[upper] || QUARTER_BASE_PRICES[upper]);
+}
 
+export function getMockHistoricalData(symbol: string, days: number): CompanyHistory | null {
+  const upper = symbol.toUpperCase().trim();
+  if (!hasMockDataForSymbol(upper)) {
+    return null;
+  }
+
+  const profile = CompanyRegistry.get(upper) || CompanyRegistry.register(upper);
   const dates = generateDateSeries(days);
   let points: { date: string; close: number }[] = [];
 

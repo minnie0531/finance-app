@@ -6,6 +6,7 @@ import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { CurrentDayView } from './components/dashboard/CurrentDayView';
 import { SevenDayView } from './components/dashboard/SevenDayView';
 import { QuarterView } from './components/dashboard/QuarterView';
+import { CustomCompanySection } from './components/dashboard/CustomCompanySection';
 import './App.css';
 
 export const App: React.FC = () => {
@@ -32,6 +33,10 @@ export const App: React.FC = () => {
           {activeTab === 'CURRENT_DAY' && <CurrentDayView />}
           {activeTab === 'LAST_7_DAYS' && <SevenDayView />}
           {activeTab === 'LAST_QUARTER' && <QuarterView />}
+        </ErrorBoundary>
+
+        <ErrorBoundary fallbackMessage="Failed to render custom company analysis section.">
+          <CustomCompanySection refreshKey={refreshKey} />
         </ErrorBoundary>
       </main>
 

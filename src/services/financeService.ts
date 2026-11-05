@@ -31,7 +31,7 @@ export class FinanceService {
     }
 
     // Register ticker in company registry if not already present
-    const profile = CompanyRegistry.get(upper) || CompanyRegistry.register(upper);
+    CompanyRegistry.register(upper);
 
     try {
       // 1. Attempt live Yahoo Finance 1-day chart query
@@ -47,33 +47,16 @@ export class FinanceService {
       // Ignore network errors and continue to resilient fallback
     }
 
-    // 2. Resilient fallback using mock or dynamic data generator
+    // 2. Resilient fallback using verified mock data
     const mock = MOCK_QUOTES[upper];
-    let normalized: StockQuote;
     if (mock) {
-      normalized = normalizeQuote(mock, upper);
-    } else {
-      // Dynamic deterministic synthetic quote for any user-added company
-      const charCode = upper.charCodeAt(0) || 75;
-      const basePrice = 100 + (charCode % 80);
-      normalized = normalizeQuote(
-        {
-          symbol: upper,
-          name: profile?.name || `${upper} Inc.`,
-          regularMarketPrice: basePrice,
-          regularMarketChange: 1.45,
-          regularMarketChangePercent: 1.12,
-          regularMarketOpen: basePrice - 1.2,
-          regularMarketDayHigh: basePrice + 2.5,
-          regularMarketDayLow: basePrice - 1.8,
-          regularMarketVolume: 4200000,
-        },
-        upper
-      );
+      const normalized = normalizeQuote(mock, upper);
+      this.quoteCache.set(upper, { quote: normalized, time: Date.now() });
+      return normalized;
     }
 
-    this.quoteCache.set(upper, { quote: normalized, time: Date.now() });
-    return normalized;
+    // Do not fabricate fake data if no data exists for the symbol
+    throw new Error(`No market data found for ticker symbol '${upper}'.`);
   }
 
   /**
@@ -123,10 +106,15 @@ export class FinanceService {
       // Continue to fallback
     }
 
-    // High-fidelity fallback
+    // High-fidelity fallback for supported symbols
     const fallbackHistory = getMockHistoricalData(upper, days);
-    this.historyCache.set(cacheKey, { history: fallbackHistory, time: Date.now() });
-    return fallbackHistory;
+    if (fallbackHistory) {
+      this.historyCache.set(cacheKey, { history: fallbackHistory, time: Date.now() });
+      return fallbackHistory;
+    }
+
+    // Do not substitute other company's data if historical data is unavailable
+    throw new Error(`No historical data found for ticker symbol '${upper}'.`);
   }
 
   /**
