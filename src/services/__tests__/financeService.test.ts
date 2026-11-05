@@ -52,4 +52,13 @@ describe('FinanceService', () => {
     expect(quote.name).toBe('Alphabet Inc.');
     expect(quote.price).toBeGreaterThan(0);
   });
+
+  it('throws a clear error when requesting an unknown ticker with no data available', async () => {
+    await expect(FinanceService.fetchQuote('NONEXISTENT_XYZ')).rejects.toThrow(
+      "No market data found for ticker symbol 'NONEXISTENT_XYZ'."
+    );
+    await expect(FinanceService.fetchHistory('NONEXISTENT_XYZ', 7)).rejects.toThrow(
+      "No historical data found for ticker symbol 'NONEXISTENT_XYZ'."
+    );
+  });
 });
